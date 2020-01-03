@@ -9,6 +9,8 @@
 #include <sstream>
 #include <thread>
 
+#include <torch/cuda.h>
+
 #include <c10d/FileStore.hpp>
 #include <c10d/ProcessGroupGloo.hpp>
 #include <c10d/test/TestUtils.hpp>
@@ -39,7 +41,7 @@ class SignalTest {
 
     // Use tiny timeout to make this test run fast
     ::c10d::ProcessGroupGloo::Options options;
-    options.timeout = std::chrono::milliseconds(50);
+    options.timeout = std::chrono::milliseconds(1000);
     options.devices.push_back(
         ::c10d::ProcessGroupGloo::createDeviceForHostname("127.0.0.1"));
 
@@ -395,8 +397,10 @@ int main(int argc, char** argv) {
 
 #ifdef USE_CUDA
   {
-    TemporaryFile file;
-    testAllreduce(file.path, at::DeviceType::CUDA);
+    if (torch::cuda::is_available()) {
+      TemporaryFile file;
+      testAllreduce(file.path, at::DeviceType::CUDA);
+    }
   }
 #endif
 
@@ -407,8 +411,10 @@ int main(int argc, char** argv) {
 
 #ifdef USE_CUDA
   {
-    TemporaryFile file;
-    testBroadcast(file.path, at::DeviceType::CUDA);
+    if (torch::cuda::is_available()) {
+      TemporaryFile file;
+      testBroadcast(file.path, at::DeviceType::CUDA);
+    }
   }
 #endif
 
